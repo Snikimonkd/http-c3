@@ -1,4 +1,4 @@
-module server;
+module http_server;
 
 import std::net::tcp;
 import std::thread::pool;
@@ -7,10 +7,12 @@ import std::io;
 struct HttpServer {
     TcpServerSocket* socket;
     ThreadPool(<128>) pool;
+    uint port;
 }
 
-fn void! HttpServer.init(&self) {
+fn void! HttpServer.init(&self, uint port) {
     self.pool.init()!;
+    self.port = port;
 }
 
 fn void! HttpServer.destroy(&self) {
@@ -19,6 +21,7 @@ fn void! HttpServer.destroy(&self) {
 
 fn int defaultFunc(void* arg) {
     Socket* sock = (TcpSocket*)arg;
+    defer sock.destroy()!!;
 
     char[128] buf;
     usz! read = sock.read(&buf);
@@ -38,7 +41,8 @@ fn int defaultFunc(void* arg) {
 }
 
 fn void! HttpServer.listen(&self) {
-    self.socket = &&(tcp::listen("localhost", 8084, 5)!);
+    io::printfn("server starts on port: %s", self.port);
+    self.socket = &&(tcp::listen("localhost", self.port, 5)!);
 
     while (true) {
         TcpSocket sock = tcp::accept(self.socket)!;

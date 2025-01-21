@@ -1,8 +1,11 @@
-module http;
+module http_server;
 import std::io;
 
 fn int main(String[] args)
 {
-	io::printn("Hello, World!");
+    HttpServer s;
+    s.init(8083)!!;
+    s.listen()!!;
+
 	return 0;
 }
