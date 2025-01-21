@@ -4,7 +4,7 @@ import std::io;
 fn int main(String[] args)
 {
     HttpServer s;
-    s.init(8083)!!;
+    s.init(port: 8083)!!;
     s.listen()!!;
 
 	return 0;
