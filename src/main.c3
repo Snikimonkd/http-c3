@@ -1,9 +1,9 @@
-module http_server;
+module server;
 import std::io;
 
 fn int main(String[] args)
 {
-    HttpServer s;
+    Server s;
     s.init(port: 8083)!!;
     s.listen()!!;
 
