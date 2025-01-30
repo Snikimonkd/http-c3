@@ -5,7 +5,7 @@ import std::thread::pool;
 import std::io;
 
 struct Server {
-    TcpServerSocket socket;
+    TcpServerSocket serverSocket;
     // TODO: why 128?? it's definitly must be more then cores but how many? make a generic module? bench?
     ThreadPool(<128>) pool;
     uint port;
@@ -24,37 +24,26 @@ fn void! Server.destroy(&self) {
 
 fn void! Server.listen(&self) {
     io::printfn("server starts on port: %s", self.port);
-    self.socket = tcp::listen("localhost", self.port, 5)!;
+    self.serverSocket = tcp::listen("localhost", self.port, 5)!;
 
     while (true) {
-        io::printfn("lol");
-        TcpSocket sock = tcp::accept(&self.socket)!;
-        io::printfn("kek");
-        //        PoolFnArgs* pfa = allocator::new(allocator, PoolFnArgs);
-        //        pfa.server = self;
-        //        pfa.socket = &sock;
-        self.pool.push(&handle, &sock)!;
+        TcpSocket clientSocket = tcp::accept(&self.serverSocket)!;
+
+        self.pool.push(&handle, &clientSocket)!;
     }
 }
 
 fn int handle(void* arg) {
-    io::printfn("wtf");
-    TcpSocket* sock = (TcpSocket*)arg;
-    defer sock.destroy()!!;
+    TcpSocket* socket = (TcpSocket*)arg;
+    defer socket.destroy()!!;
 
-    char[128] buf;
-    usz! read = sock.read(&buf);
-    if (catch err = read) {
-        io::printfn("read error: %s", err);
+    Request! req = init(socket);
+    if (catch err = req) {
+        io::printfn("wtf: %s", err);
         return -1;
     }
 
-    io::printfn("read: %s", buf);
-
-    if (catch err = sock.write(&buf)) {
-        io::printfn("write error: %s", err);
-        return -1;
-    }
+    io::printfn("method: %s", req.method);
 
     return 0;
 }
